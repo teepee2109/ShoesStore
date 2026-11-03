@@ -1,0 +1,34 @@
+# Local secrets and environment overrides
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# IDE and editor state
+.idea/
+.vscode/
+*.iml
+
+# Node.js dependencies and logs
+**/node_modules/
+npm-debug.log*
+
+# Flutter / Dart and generated Android build output
+**/.dart_tool/
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.gradle/
+/build/
+**/build/
+**/local.properties
+**/captures/
+**/*.jks
+**/*.keystore
+**/key.properties
+
+# Runtime uploads
+BackEnd/uploads/
+
+# OS files
+.DS_Store
+Thumbs.db
