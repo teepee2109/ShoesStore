@@ -242,6 +242,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             DropdownButtonFormField<int>(
               key: ValueKey(_selectedAddress?.id),
               initialValue: _selectedAddress?.id,
+              isExpanded: true,
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.location_on_outlined),
               ),
@@ -251,6 +252,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       value: address.id,
                       child: Text(
                         '${address.receiverName} · ${address.city}',
+                        maxLines: 1,
+                        softWrap: false,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
