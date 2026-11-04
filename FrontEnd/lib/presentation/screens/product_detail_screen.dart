@@ -31,7 +31,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _loadProduct();
+    _loadProduct(force: true);
   }
 
   @override
@@ -126,17 +126,48 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         .map((variant) => variant.size)
         .toSet()
         .toList();
-    final selectedSize = _selectedSize ?? (sizes.isEmpty ? null : sizes.first);
-    final colors = product.variants
-        .where(
-          (variant) => selectedSize == null || variant.size == selectedSize,
-        )
+    ProductVariant? firstInStockVariant;
+    for (final variant in product.variants) {
+      if (variant.stock > 0) {
+        firstInStockVariant = variant;
+        break;
+      }
+    }
+    final selectedSizeHasStock = product.variants.any(
+      (variant) => variant.size == _selectedSize && variant.stock > 0,
+    );
+    final fallbackSize =
+        firstInStockVariant?.size ?? (sizes.isEmpty ? null : sizes.first);
+    final selectedSize =
+        _selectedSize != null &&
+            sizes.contains(_selectedSize) &&
+            (selectedSizeHasStock || firstInStockVariant == null)
+        ? _selectedSize
+        : fallbackSize;
+    final variantsForSize = product.variants.where(
+      (variant) => variant.size == selectedSize,
+    );
+    final colors = variantsForSize
         .map((variant) => variant.color)
         .toSet()
         .toList();
-    final selectedColor = colors.contains(_selectedColor)
+    ProductVariant? firstInStockVariantForSize;
+    for (final variant in variantsForSize) {
+      if (variant.stock > 0) {
+        firstInStockVariantForSize = variant;
+        break;
+      }
+    }
+    final selectedColorHasStock = variantsForSize.any(
+      (variant) => variant.color == _selectedColor && variant.stock > 0,
+    );
+    final selectedColor =
+        _selectedColor != null &&
+            colors.contains(_selectedColor) &&
+            (selectedColorHasStock || firstInStockVariantForSize == null)
         ? _selectedColor
-        : (colors.isEmpty ? null : colors.first);
+        : (firstInStockVariantForSize?.color ??
+              (colors.isEmpty ? null : colors.first));
     final stock = product.variants
         .where(
           (variant) =>
@@ -151,6 +182,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           (product.categoryName ?? 'PRODUCT').toUpperCase(),
           style: const TextStyle(fontSize: 13, letterSpacing: 1.1),
         ),
+        actions: [
+          IconButton(
+            onPressed: () => _loadProduct(force: true),
+            tooltip: 'Làm mới tồn kho',
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 26),
@@ -234,18 +273,24 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             Wrap(
               spacing: 9,
               runSpacing: 9,
-              children: colors
-                  .map(
-                    (color) => ChoiceChip(
-                      label: Text(color),
-                      selected: selectedColor == color,
-                      onSelected: (_) => setState(() {
-                        _selectedSize = selectedSize;
-                        _selectedColor = color;
-                      }),
-                    ),
-                  )
-                  .toList(),
+              children: colors.map((color) {
+                final colorInStock = product.variants.any(
+                  (variant) =>
+                      variant.size == selectedSize &&
+                      variant.color == color &&
+                      variant.stock > 0,
+                );
+                return ChoiceChip(
+                  label: Text(colorInStock ? color : '$color · Hết hàng'),
+                  selected: selectedColor == color,
+                  onSelected: colorInStock
+                      ? (_) => setState(() {
+                          _selectedSize = selectedSize;
+                          _selectedColor = color;
+                        })
+                      : null,
+                );
+              }).toList(),
             ),
           const SizedBox(height: 22),
           Row(
@@ -378,8 +423,12 @@ class _ProductReviewsState extends State<_ProductReviews> {
     _reviews = _repository.list(widget.productId);
   }
 
-  void _reload() =>
-      setState(() => _reviews = _repository.list(widget.productId));
+  void _reload() {
+    final reviews = _repository.list(widget.productId);
+    setState(() {
+      _reviews = reviews;
+    });
+  }
 
   @override
   void didUpdateWidget(covariant _ProductReviews oldWidget) {
@@ -390,61 +439,10 @@ class _ProductReviewsState extends State<_ProductReviews> {
   }
 
   Future<void> _writeReview() async {
-    var rating = 5;
-    final comment = TextEditingController();
     final result = await showDialog<(int, String)?>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Đánh giá sản phẩm'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  5,
-                  (index) => IconButton(
-                    onPressed: () => setDialogState(() => rating = index + 1),
-                    icon: Icon(
-                      index < rating
-                          ? Icons.star_rounded
-                          : Icons.star_outline_rounded,
-                      color: const Color(0xFFE4A500),
-                    ),
-                  ),
-                ),
-              ),
-              TextField(
-                controller: comment,
-                minLines: 2,
-                maxLines: 4,
-                maxLength: 2000,
-                decoration: const InputDecoration(
-                  hintText: 'Chia sẻ trải nghiệm của bạn',
-                ),
-              ),
-              const Text(
-                'Chỉ tài khoản đã nhận sản phẩm mới có thể đánh giá.',
-                style: TextStyle(fontSize: 11, color: Colors.black54),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Hủy'),
-            ),
-            FilledButton(
-              onPressed: () =>
-                  Navigator.pop(dialogContext, (rating, comment.text.trim())),
-              child: const Text('Gửi đánh giá'),
-            ),
-          ],
-        ),
-      ),
+      builder: (_) => const _ProductReviewDialog(),
     );
-    comment.dispose();
     if (result == null || !mounted) return;
     setState(() => _submitting = true);
     try {
@@ -596,4 +594,95 @@ class _FeatureRow extends StatelessWidget {
       ],
     ),
   );
+}
+
+class _ProductReviewDialog extends StatefulWidget {
+  const _ProductReviewDialog();
+
+  @override
+  State<_ProductReviewDialog> createState() => _ProductReviewDialogState();
+}
+
+class _ProductReviewDialogState extends State<_ProductReviewDialog> {
+  final _commentController = TextEditingController();
+  int _rating = 5;
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final maxContentHeight = (media.size.height - media.viewInsets.bottom - 220)
+        .clamp(80.0, 360.0)
+        .toDouble();
+
+    return AlertDialog(
+      title: const Text('Đánh giá sản phẩm'),
+      content: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxContentHeight),
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          child: SizedBox(
+            width: 420,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    5,
+                    (index) => IconButton(
+                      constraints: const BoxConstraints.tightFor(
+                        width: 40,
+                        height: 40,
+                      ),
+                      padding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () => setState(() => _rating = index + 1),
+                      icon: Icon(
+                        index < _rating
+                            ? Icons.star_rounded
+                            : Icons.star_outline_rounded,
+                        size: 23,
+                        color: const Color(0xFFE4A500),
+                      ),
+                    ),
+                  ),
+                ),
+                TextField(
+                  controller: _commentController,
+                  minLines: 2,
+                  maxLines: 4,
+                  maxLength: 2000,
+                  decoration: const InputDecoration(
+                    hintText: 'Chia sẻ trải nghiệm của bạn',
+                  ),
+                ),
+                const Text(
+                  'Chỉ tài khoản đã nhận sản phẩm mới có thể đánh giá.',
+                  style: TextStyle(fontSize: 11, color: Colors.black54),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Hủy'),
+        ),
+        FilledButton(
+          onPressed: () =>
+              Navigator.of(context)
+                  .pop((_rating, _commentController.text.trim())),
+          child: const Text('Gửi đánh giá'),
+        ),
+      ],
+    );
+  }
 }

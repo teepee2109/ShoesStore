@@ -26,7 +26,12 @@ class _OrderListScreenState extends State<OrderListScreen> {
     _orders = _repository.getOrders();
   }
 
-  void _retry() => setState(() => _orders = _repository.getOrders());
+  void _retry() {
+    final orders = _repository.getOrders();
+    setState(() {
+      _orders = orders;
+    });
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(

@@ -68,13 +68,6 @@ export async function insertProductImages(connection, productId, images) {
   }
 }
 
-export async function setMainImageIfEmpty(connection, productId, url) {
-  await connection.execute(
-    'UPDATE products SET main_image = ? WHERE id = ? AND main_image IS NULL',
-    [url, productId],
-  );
-}
-
 export async function findProductImage(connection, productId, imageId) {
   const [rows] = await connection.execute(
     `SELECT id, url FROM product_images

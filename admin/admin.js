@@ -145,15 +145,33 @@ async function saveProduct(event) {
   const button = $('#save-product');
   button.disabled = true;
   try {
-    const result = await api(id ? `/products/${id}` : '/products', {
-      method: id ? 'PUT' : 'POST', body: JSON.stringify(data),
+    const result = await api(id ? '/products/' + id : '/products', {
+      method: id ? 'PUT' : 'POST',
+      body: JSON.stringify(data),
     });
     const productId = Number(id || result.id);
+    if (!productId) throw new Error('Không xác định được sản phẩm vừa lưu.');
+
+    // Keep the newly created ID so retrying a failed image upload updates this
+    // product instead of creating another product.
+    if (!id) {
+      $('#product-id').value = String(productId);
+      $('#product-modal-title').textContent = 'Chỉnh sửa sản phẩm';
+    }
+
     const files = $('#product-images').files;
     if (files.length) {
       const formData = new FormData();
       for (const file of files) formData.append('images', file);
-      await api(`/products/${productId}/images`, { method: 'POST', body: formData });
+      try {
+        await api('/products/' + productId + '/images', {
+          method: 'POST',
+          body: formData,
+        });
+        $('#product-images').value = '';
+      } catch (error) {
+        throw new Error('Sản phẩm đã lưu nhưng tải ảnh thất bại: ' + error.message);
+      }
     }
     productModal.hide();
     await loadProducts();
@@ -164,7 +182,6 @@ async function saveProduct(event) {
     button.disabled = false;
   }
 }
-
 async function openVariants(productId) {
   activeProductId = Number(productId);
   $('#variant-form').reset();
@@ -450,13 +467,14 @@ $('#admin-chat-input').addEventListener('input', () => {
 
 $('#category-form').addEventListener('submit', async (event) => {
   event.preventDefault();
+  const form = event.currentTarget;
   const id = $('#category-id').value;
   const data = { name: $('#category-name').value.trim() };
   const slug = $('#category-slug').value.trim();
   if (slug) data.slug = slug;
   try {
     await api(id ? `/categories/${id}` : '/categories', { method: id ? 'PUT' : 'POST', body: JSON.stringify(data) });
-    event.currentTarget.reset();
+    form.reset();
     $('#category-id').value = '';
     $('#cancel-category-edit').classList.add('d-none');
     await loadCategories();

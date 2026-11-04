@@ -23,7 +23,12 @@ class _AddressBookScreenState extends State<AddressBookScreen> {
     _addresses = _repository.getAddresses();
   }
 
-  void _reload() => setState(() => _addresses = _repository.getAddresses());
+  void _reload() {
+    final addresses = _repository.getAddresses();
+    setState(() {
+      _addresses = addresses;
+    });
+  }
 
   Future<void> _edit([ShippingAddress? address]) async {
     final result = await showDialog<_AddressDraft>(

@@ -92,8 +92,8 @@ export async function addProductImages(idValue, files = []) {
       const product = await productModel.productExists(productId, connection);
       if (!product) throw new AppError('Không tìm thấy sản phẩm.', 404);
       await productModel.insertProductImages(connection, productId, images);
-      if (!product.main_image && images[0]) {
-        await productModel.setMainImageIfEmpty(connection, productId, images[0].url);
+      if (images[0]) {
+        await productModel.setMainImage(connection, productId, images[0].url);
       }
     });
 

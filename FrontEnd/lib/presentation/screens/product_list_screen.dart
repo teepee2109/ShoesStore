@@ -85,134 +85,17 @@ class _ProductListScreenState extends State<ProductListScreen> {
   }
 
   Future<void> _showFilters() async {
-    final minController = TextEditingController(
-      text: _minPrice?.toStringAsFixed(0) ?? '',
-    );
-    final maxController = TextEditingController(
-      text: _maxPrice?.toStringAsFixed(0) ?? '',
-    );
-    final sizeController = TextEditingController(text: _size ?? '');
-    final colorController = TextEditingController(text: _color ?? '');
-    final formKey = GlobalKey<FormState>();
-
     final result = await showModalBottomSheet<Map<String, Object?>>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            20,
-            4,
-            20,
-            MediaQuery.viewInsetsOf(sheetContext).bottom + 20,
-          ),
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Lọc sản phẩm',
-                  style: Theme.of(sheetContext).textTheme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: minController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Giá từ',
-                          suffixText: '₫',
-                        ),
-                        validator: (value) => _validatePrice(
-                          value,
-                          maxController.text,
-                          isMinimum: true,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextFormField(
-                        controller: maxController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Giá đến',
-                          suffixText: '₫',
-                        ),
-                        validator: (value) => _validatePrice(
-                          value,
-                          minController.text,
-                          isMinimum: false,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: sizeController,
-                        decoration: const InputDecoration(labelText: 'Size'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextFormField(
-                        controller: colorController,
-                        decoration: const InputDecoration(labelText: 'Màu sắc'),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    TextButton(
-                      onPressed: () =>
-                          Navigator.pop(sheetContext, {'clear': true}),
-                      child: const Text('Xóa bộ lọc'),
-                    ),
-                    const Spacer(),
-                    FilledButton(
-                      onPressed: () {
-                        if (!formKey.currentState!.validate()) return;
-                        Navigator.pop(sheetContext, <String, Object?>{
-                          'minPrice': double.tryParse(
-                            minController.text.trim(),
-                          ),
-                          'maxPrice': double.tryParse(
-                            maxController.text.trim(),
-                          ),
-                          'size': sizeController.text.trim(),
-                          'color': colorController.text.trim(),
-                        });
-                      },
-                      child: const Text('Áp dụng'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
+      builder: (_) => _ProductFilterSheet(
+        minPrice: _minPrice,
+        maxPrice: _maxPrice,
+        size: _size,
+        color: _color,
       ),
     );
-    minController.dispose();
-    maxController.dispose();
-    sizeController.dispose();
-    colorController.dispose();
     if (!mounted || result == null) return;
     setState(() {
       if (result['clear'] == true) {
@@ -230,25 +113,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
       }
     });
     await _applyFilters();
-  }
-
-  String? _validatePrice(
-    String? value,
-    String otherValue, {
-    required bool isMinimum,
-  }) {
-    final text = value?.trim() ?? '';
-    if (text.isEmpty) return null;
-    final price = double.tryParse(text);
-    if (price == null || price < 0) return 'Nhập mức giá hợp lệ.';
-    final otherPrice = double.tryParse(otherValue.trim());
-    if (otherPrice != null &&
-        (isMinimum ? price > otherPrice : price < otherPrice)) {
-      return isMinimum
-          ? 'Giá từ cần nhỏ hơn giá đến.'
-          : 'Giá đến cần lớn hơn giá từ.';
-    }
-    return null;
   }
 
   void _onSearchChanged(String value) {
@@ -461,5 +325,172 @@ class _CategoryChip extends StatelessWidget {
     label: Text(category.name),
     selected: selected,
     onSelected: (_) => onSelect(category.slug),
+  );
+}
+
+class _ProductFilterSheet extends StatefulWidget {
+  const _ProductFilterSheet({
+    required this.minPrice,
+    required this.maxPrice,
+    required this.size,
+    required this.color,
+  });
+
+  final double? minPrice;
+  final double? maxPrice;
+  final String? size;
+  final String? color;
+
+  @override
+  State<_ProductFilterSheet> createState() => _ProductFilterSheetState();
+}
+
+class _ProductFilterSheetState extends State<_ProductFilterSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late final _minController = TextEditingController(
+    text: widget.minPrice?.toStringAsFixed(0) ?? '',
+  );
+  late final _maxController = TextEditingController(
+    text: widget.maxPrice?.toStringAsFixed(0) ?? '',
+  );
+  late final _sizeController = TextEditingController(text: widget.size ?? '');
+  late final _colorController = TextEditingController(text: widget.color ?? '');
+
+  @override
+  void dispose() {
+    _minController.dispose();
+    _maxController.dispose();
+    _sizeController.dispose();
+    _colorController.dispose();
+    super.dispose();
+  }
+
+  String? _validatePrice(
+    String? value,
+    String otherValue, {
+    required bool isMinimum,
+  }) {
+    final text = value?.trim() ?? '';
+    if (text.isEmpty) return null;
+    final price = double.tryParse(text);
+    if (price == null || price < 0) return 'Nhập mức giá hợp lệ.';
+    final otherText = otherValue.trim();
+    if (otherText.isEmpty) return null;
+    final otherPrice = double.tryParse(otherText);
+    if (otherPrice == null || otherPrice < 0) return 'Nhập mức giá hợp lệ.';
+    if (isMinimum && price > otherPrice) {
+      return 'Giá từ cần nhỏ hơn hoặc bằng giá đến.';
+    }
+    if (!isMinimum && price < otherPrice) {
+      return 'Giá đến cần lớn hơn hoặc bằng giá từ.';
+    }
+    return null;
+  }
+
+  void _apply() {
+    if (!_formKey.currentState!.validate()) return;
+    Navigator.of(context).pop(<String, Object?>{
+      'minPrice': double.tryParse(_minController.text.trim()),
+      'maxPrice': double.tryParse(_maxController.text.trim()),
+      'size': _sizeController.text.trim(),
+      'color': _colorController.text.trim(),
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => SafeArea(
+    child: Padding(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        4,
+        20,
+        MediaQuery.viewInsetsOf(context).bottom + 20,
+      ),
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Lọc sản phẩm',
+                style: Theme.of(context).textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _minController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Giá từ',
+                        suffixText: '₫',
+                      ),
+                      validator: (value) => _validatePrice(
+                        value,
+                        _maxController.text,
+                        isMinimum: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _maxController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Giá đến',
+                        suffixText: '₫',
+                      ),
+                      validator: (value) => _validatePrice(
+                        value,
+                        _minController.text,
+                        isMinimum: false,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _sizeController,
+                      decoration: const InputDecoration(labelText: 'Size'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _colorController,
+                      decoration: const InputDecoration(labelText: 'Màu sắc'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop({'clear': true}),
+                    child: const Text('Xóa bộ lọc'),
+                  ),
+                  const Spacer(),
+                  FilledButton(onPressed: _apply, child: const Text('Áp dụng')),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
   );
 }

@@ -36,7 +36,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     return _repository.getOrder(id);
   }
 
-  void _retry() => setState(() => _order = _loadOrder());
+  void _retry() {
+    final order = _loadOrder();
+    setState(() {
+      _order = order;
+    });
+  }
 
   Future<void> _cancelOrder(StoreOrder order) async {
     final shouldCancel = await showDialog<bool>(
@@ -60,7 +65,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     setState(() => _cancelling = true);
     try {
       final updatedOrder = await _repository.cancelOrder(order.id);
-      if (mounted) setState(() => _order = Future.value(updatedOrder));
+      if (mounted) {
+        setState(() {
+          _order = Future.value(updatedOrder);
+        });
+      }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context)

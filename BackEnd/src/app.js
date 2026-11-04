@@ -43,6 +43,21 @@ app.use('/api-docs', (req, res, next) => {
   next();
 }, swaggerUi.serve, swaggerUi.setup(openapiSpec, { explorer: true, persistAuthorization: true }));
 
+app.get('/', (_req, res) => {
+  res.json({
+    success: true,
+    data: {
+      status: 'ok',
+      health: '/health',
+      apiBase: '/api/v1',
+      documentation: '/api-docs/',
+      openapi: '/openapi.json',
+      admin: '/admin-ui/',
+    },
+    message: 'Adidas Shoe Store API is running.',
+  });
+});
+
 app.get('/health', (_req, res) => {
   res.json({ success: true, data: { status: 'ok' }, message: 'API is running.' });
 });
