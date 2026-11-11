@@ -1,20 +1,24 @@
 import { pool } from '../config/database.js';
 import { AppError } from '../utils/app-error.js';
-import { lowStockQuerySchema, revenueQuerySchema, topProductsQuerySchema } from '../validators/admin.validators.js';
+import {
+  lowStockQuerySchema,
+  orderStatusQuerySchema,
+  revenueQuerySchema,
+  topProductsQuerySchema,
+} from '../validators/admin.validators.js';
 
 const orderStatuses = ['pending', 'confirmed', 'shipping', 'delivered', 'cancelled'];
 
-export async function revenue(query) {
-  const filters = revenueQuerySchema.parse(query);
+function createdAtConditions(filters) {
   for (const date of [filters.from, filters.to]) {
     if (date) {
       const parsed = new Date(`${date}T00:00:00Z`);
       if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date) {
-        throw new AppError('Ngày lọc doanh thu không hợp lệ.', 400);
+        throw new AppError('Ngày lọc báo cáo không hợp lệ.', 400);
       }
     }
   }
-  const conditions = ["payment_status = 'paid'", "status <> 'cancelled'"];
+  const conditions = [];
   const values = [];
   if (filters.from) {
     conditions.push('created_at >= ?');
@@ -24,6 +28,14 @@ export async function revenue(query) {
     conditions.push('created_at < DATE_ADD(?, INTERVAL 1 DAY)');
     values.push(`${filters.to} 00:00:00`);
   }
+  return { conditions, values };
+}
+
+export async function revenue(query) {
+  const filters = revenueQuerySchema.parse(query);
+  const dateRange = createdAtConditions(filters);
+  const conditions = ["payment_status = 'paid'", "status <> 'cancelled'", ...dateRange.conditions];
+  const values = dateRange.values;
   const format = filters.group === 'month' ? '%Y-%m' : '%Y-%m-%d';
   const [items] = await pool.execute(
     `SELECT DATE_FORMAT(created_at, '${format}') AS period,
@@ -36,7 +48,9 @@ export async function revenue(query) {
 }
 
 export async function topProducts(query) {
-  const { limit } = topProductsQuerySchema.parse(query);
+  const filters = topProductsQuerySchema.parse(query);
+  const dateRange = createdAtConditions(filters);
+  const conditions = ["o.status <> 'cancelled'", "o.payment_status = 'paid'", ...dateRange.conditions.map((condition) => condition.replaceAll('created_at', 'o.created_at'))];
   const [items] = await pool.execute(
     `SELECT p.id AS product_id, p.name AS product_name,
             SUM(oi.quantity) AS quantity_sold,
@@ -45,11 +59,11 @@ export async function topProducts(query) {
      JOIN orders o ON o.id = oi.order_id
      JOIN product_variants pv ON pv.id = oi.variant_id
      JOIN products p ON p.id = pv.product_id
-     WHERE o.status <> 'cancelled' AND o.payment_status = 'paid'
+     WHERE ${conditions.join(' AND ')}
      GROUP BY p.id, p.name
      ORDER BY quantity_sold DESC, revenue DESC
      LIMIT ?`,
-    [limit],
+    [...dateRange.values, filters.limit],
   );
   return items;
 }
@@ -69,9 +83,13 @@ export async function lowStock(query) {
   return { threshold, items };
 }
 
-export async function orderCounts() {
+export async function orderCounts(query = {}) {
+  const filters = orderStatusQuerySchema.parse(query);
+  const dateRange = createdAtConditions(filters);
+  const where = dateRange.conditions.length ? `WHERE ${dateRange.conditions.join(' AND ')}` : '';
   const [rows] = await pool.execute(
-    `SELECT status, COUNT(*) AS total FROM orders GROUP BY status`,
+    `SELECT status, COUNT(*) AS total FROM orders ${where} GROUP BY status`,
+    dateRange.values,
   );
   const counts = Object.fromEntries(orderStatuses.map((status) => [status, 0]));
   for (const row of rows) counts[row.status] = Number(row.total);

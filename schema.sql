@@ -173,7 +173,7 @@ CREATE TABLE orders (
   total_amount     DECIMAL(12,0)   NOT NULL,
   status           ENUM('pending','confirmed','shipping','delivered','cancelled')
                    NOT NULL DEFAULT 'pending',
-  payment_method   VARCHAR(30)     NOT NULL DEFAULT 'cod',   -- cod | vnpay | momo | paypal
+  payment_method   VARCHAR(30)     NOT NULL DEFAULT 'cod',   -- cod | sepay | momo | paypal
   payment_status   ENUM('unpaid','paid','failed','refunded')
                    NOT NULL DEFAULT 'unpaid',
   created_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -214,7 +214,7 @@ CREATE TABLE order_items (
 CREATE TABLE payments (
   id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   order_id        BIGINT UNSIGNED NOT NULL,
-  provider        VARCHAR(30)     NOT NULL,                  -- cod | vnpay | momo | paypal
+  provider        VARCHAR(30)     NOT NULL,                  -- cod | sepay | momo | paypal
   transaction_id  VARCHAR(100)    NULL,
   amount          DECIMAL(12,0)   NOT NULL,
   status          ENUM('pending','success','failed','refunded') NOT NULL DEFAULT 'pending',

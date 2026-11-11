@@ -1,15 +1,16 @@
 import '../datasources/payment_remote_data_source.dart';
-import '../models/vnpay_payment.dart';
+import '../models/sepay_payment.dart';
 
 class PaymentRepository {
   PaymentRepository(this._remote);
 
   final PaymentRemoteDataSource _remote;
 
-  Future<VnpayPaymentSession> createVnpay(int orderId) =>
-      _remote.createVnpay(orderId);
+  Future<SePayPaymentSession> createSePay(int orderId) =>
+      _remote.createSePay(orderId);
 
-  Future<VnpayPaymentResult> verifyVnpayReturn(
-    Map<String, String> queryParameters,
-  ) => _remote.verifyVnpayReturn(queryParameters);
+  Future<SePayPaymentResult> getSePayStatus(
+    int orderId, {
+    required String returnStatus,
+  }) => _remote.getSePayStatus(orderId, returnStatus: returnStatus);
 }

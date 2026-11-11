@@ -130,9 +130,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       );
       await cartProvider.loadCart(force: true);
       if (!mounted) return;
-      if (_paymentMethod == 'vnpay') {
-        final payment = await _paymentRepository.createVnpay(createdOrder.id);
-        if (mounted) context.push('/payments/vnpay', extra: payment);
+      if (_paymentMethod == 'sepay') {
+        final payment = await _paymentRepository.createSePay(createdOrder.id);
+        if (mounted) context.push('/payments/sepay', extra: payment);
       } else {
         context.go('/orders/${createdOrder.id}');
       }
@@ -293,10 +293,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
           const SizedBox(height: 9),
           _PaymentOption(
-            value: 'vnpay',
+            value: 'sepay',
             groupValue: _paymentMethod,
-            title: 'VNPay',
-            subtitle: 'Thanh toán trực tuyến',
+            title: 'SePay',
+            subtitle: 'Thanh toán chuyển khoản qua QR',
             icon: Icons.qr_code_2_rounded,
             onChanged: (value) => setState(() => _paymentMethod = value),
           ),

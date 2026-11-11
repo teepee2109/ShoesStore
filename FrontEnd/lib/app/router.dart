@@ -14,8 +14,8 @@ import '../presentation/screens/product_list_screen.dart';
 import '../presentation/screens/profile_screen.dart';
 import '../presentation/screens/splash_screen.dart';
 import '../presentation/screens/wishlist_screen.dart';
-import '../presentation/screens/vnpay_webview_screen.dart';
-import '../data/models/vnpay_payment.dart';
+import '../presentation/screens/sepay_webview_screen.dart';
+import '../data/models/sepay_payment.dart';
 import '../presentation/widgets/store_scaffold.dart';
 import '../providers/auth_provider.dart';
 
@@ -114,9 +114,9 @@ GoRouter buildRouter(AuthProvider authProvider) => GoRouter(
           OrderDetailScreen(orderId: state.pathParameters['id']!),
     ),
     GoRoute(
-      path: '/payments/vnpay',
+      path: '/payments/sepay',
       builder: (context, state) =>
-          VnpayWebViewScreen(payment: state.extra! as VnpayPaymentSession),
+          SePayWebViewScreen(payment: state.extra! as SePayPaymentSession),
     ),
     GoRoute(path: '/chat', builder: (context, state) => const ChatScreen()),
     GoRoute(

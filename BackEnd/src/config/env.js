@@ -19,14 +19,15 @@ export const env = {
     host: process.env.DB_HOST ?? '127.0.0.1',
     port: Number(process.env.DB_PORT ?? 3306),
     user: process.env.DB_USER ?? 'root',
-    password: process.env.DB_PASSWORD ?? '',
+    password: process.env.DB_PASSWORD ?? 'admin',
     database: process.env.DB_NAME ?? 'adidas_shop',
   },
-  vnpay: {
-    tmnCode: process.env.VNPAY_TMN_CODE ?? '',
-    hashSecret: process.env.VNPAY_HASH_SECRET ?? '',
-    paymentUrl: process.env.VNPAY_URL ?? 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
-    returnUrl: process.env.VNPAY_RETURN_URL ?? '',
-    ipnUrl: process.env.VNPAY_IPN_URL ?? '',
+  sepay: {
+    environment: process.env.SEPAY_ENVIRONMENT ?? 'sandbox',
+    merchantId: process.env.SEPAY_MERCHANT_ID ?? '',
+    merchantSecretKey: process.env.SEPAY_MERCHANT_SECRET_KEY ?? '',
+    ipnSecretKey: process.env.SEPAY_IPN_SECRET_KEY ?? '',
+    returnUrl: process.env.SEPAY_RETURN_URL ?? '',
+    ipnUrl: process.env.SEPAY_IPN_URL ?? '',
   },
 };

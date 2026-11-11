@@ -23,7 +23,7 @@ export const addressSchema = z.object({
 
 export const orderCreateSchema = z.object({
   address_id: id,
-  payment_method: z.enum(['cod', 'vnpay', 'momo', 'paypal']).default('cod'),
+  payment_method: z.enum(['cod', 'sepay', 'momo', 'paypal']).default('cod'),
 });
 
 export const orderListQuerySchema = z.object({

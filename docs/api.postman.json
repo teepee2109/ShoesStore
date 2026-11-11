@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "3b9a79b2-4cf4-4a23-8785-3b93a9323b5f",
     "name": "Adidas Shoe Store API",
-    "description": "Collection cho API v1. Đăng nhập admin/customer để lưu token. VNPay sandbox cần cấu hình VNPAY_* và URL HTTPS public cho IPN. Chat realtime dùng Socket.IO events join, message:send, message:new, typing.",
+    "description": "Collection cho API v1. Đăng nhập admin/customer để lưu token. SePay cần cấu hình SEPAY_* và URL HTTPS public cho IPN. Chat realtime dùng Socket.IO events join, message:send, message:new, typing.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -1224,7 +1224,7 @@
           }
         },
         {
-          "name": "Create VNPay sandbox payment",
+          "name": "Create SePay checkout",
           "request": {
             "method": "POST",
             "header": [
@@ -1234,9 +1234,9 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/payments/vnpay/create"
+              "raw": "{{baseUrl}}/api/v1/payments/sepay/create"
             },
-            "description": "Call after creating an order with payment_method=vnpay. The backend returns a signed sandbox URL.",
+            "description": "Call after creating an order with payment_method=sepay. The backend returns a signed form for the SePay sandbox checkout.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1259,14 +1259,24 @@
           }
         },
         {
-          "name": "Verify VNPay return query",
+          "name": "Get SePay payment status",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/payments/vnpay/return?vnp_TxnRef={{vnpTxnRef}}&vnp_Amount={{vnpAmount}}&vnp_ResponseCode={{vnpResponseCode}}&vnp_TransactionStatus={{vnpTransactionStatus}}&vnp_TmnCode={{vnpTmnCode}}&vnp_SecureHash={{vnpSecureHash}}"
+              "raw": "{{baseUrl}}/api/v1/payments/sepay/status/{{orderId}}"
             },
-            "description": "Use the complete query string from the VNPay browser return. IPN remains authoritative for order payment status."
+            "description": "Authenticated customer endpoint. SePay IPN remains authoritative for order payment status.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]

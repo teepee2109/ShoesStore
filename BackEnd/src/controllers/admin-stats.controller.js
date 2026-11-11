@@ -12,6 +12,6 @@ export async function lowStock(req, res) {
   res.json({ success: true, data: await adminStatsService.lowStock(req.query), message: 'Lấy danh sách sắp hết hàng thành công.' });
 }
 
-export async function orderCounts(_req, res) {
-  res.json({ success: true, data: await adminStatsService.orderCounts(), message: 'Lấy số đơn theo trạng thái thành công.' });
+export async function orderCounts(req, res) {
+  res.json({ success: true, data: await adminStatsService.orderCounts(req.query), message: 'Lấy số đơn theo trạng thái thành công.' });
 }

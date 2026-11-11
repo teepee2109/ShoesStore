@@ -465,6 +465,7 @@ String _statusLabel(String status) => switch (status) {
 };
 
 String _paymentLabel(String method) => switch (method) {
+  'sepay' => 'SePay',
   'vnpay' => 'VNPay',
   'momo' => 'MoMo',
   'paypal' => 'PayPal',

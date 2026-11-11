@@ -65,32 +65,75 @@
               </div>
               <div class="toolbar"><input id="product-search" class="form-control" placeholder="Tìm tên sản phẩm..."><button class="btn btn-outline-dark" id="reload-products">Làm mới</button></div>
               <div class="table-responsive panel"><table class="table align-middle mb-0"><thead><tr><th>Sản phẩm</th><th>Danh mục</th><th>Giá</th><th>Tồn kho</th><th class="text-end">Quản lý</th></tr></thead><tbody id="products-table"></tbody></table></div>
+              <div class="products-pagination">
+                <span id="products-page-summary" class="products-page-summary">Đang tải danh sách…</span>
+                <div class="products-page-controls">
+                  <label for="products-page-size">Số dòng</label>
+                  <select id="products-page-size" class="form-select form-select-sm" aria-label="Số sản phẩm mỗi trang">
+                    <option value="10" selected>10</option><option value="20">20</option><option value="50">50</option>
+                  </select>
+                  <button id="products-prev-page" class="btn btn-sm btn-outline-dark" type="button" aria-label="Trang trước">Trước</button>
+                  <span id="products-page-indicator" class="products-page-indicator">Trang 1 / 1</span>
+                  <button id="products-next-page" class="btn btn-sm btn-outline-dark" type="button" aria-label="Trang sau">Sau</button>
+                </div>
+              </div>
             </section>
 
             <section id="view-categories" class="data-view d-none">
               <div class="section-heading"><div><h2>Danh mục</h2><p>Tạo và chỉnh sửa nhóm sản phẩm</p></div></div>
               <div class="panel p-3 p-lg-4 mb-3"><form id="category-form" class="row g-3 align-items-end"><input id="category-id" type="hidden"><div class="col-md-5"><label class="form-label" for="category-name">Tên danh mục</label><input id="category-name" class="form-control" required maxlength="100"></div><div class="col-md-5"><label class="form-label" for="category-slug">Slug (để trống sẽ tự tạo)</label><input id="category-slug" class="form-control" maxlength="120"></div><div class="col-md-2 d-grid"><button class="btn btn-dark" type="submit">Lưu danh mục</button></div><div class="col-12"><button id="cancel-category-edit" class="btn btn-sm btn-link text-secondary d-none" type="button">Hủy chỉnh sửa</button></div></form></div>
               <div class="table-responsive panel"><table class="table align-middle mb-0"><thead><tr><th>Tên</th><th>Slug</th><th>Sản phẩm</th><th class="text-end">Thao tác</th></tr></thead><tbody id="categories-table"></tbody></table></div>
+              <div class="list-pagination">
+                <span id="categories-page-summary" class="list-page-summary">Đang tải danh sách…</span>
+                <div class="list-page-controls"><label for="categories-page-size">Số dòng</label><select id="categories-page-size" class="form-select form-select-sm" aria-label="Số danh mục mỗi trang"><option value="10" selected>10</option><option value="20">20</option><option value="50">50</option></select><button id="categories-prev-page" class="btn btn-sm btn-outline-dark" type="button">Trước</button><span id="categories-page-indicator" class="list-page-indicator">Trang 1 / 1</span><button id="categories-next-page" class="btn btn-sm btn-outline-dark" type="button">Sau</button></div>
+              </div>
             </section>
 
             <section id="view-orders" class="data-view d-none">
               <div class="section-heading"><div><h2>Đơn hàng</h2><p>Theo dõi đơn và cập nhật trạng thái giao hàng</p></div><button class="btn btn-outline-dark" id="reload-orders">Làm mới</button></div>
               <div class="toolbar"><select id="order-filter" class="form-select"><option value="">Tất cả trạng thái</option><option value="pending">Chờ xác nhận</option><option value="confirmed">Đã xác nhận</option><option value="shipping">Đang giao</option><option value="delivered">Đã giao</option><option value="cancelled">Đã hủy</option></select></div>
               <div class="table-responsive panel"><table class="table align-middle mb-0"><thead><tr><th>Mã đơn / Khách hàng</th><th>Địa chỉ nhận</th><th>Tổng tiền</th><th>Trạng thái</th><th class="text-end">Cập nhật</th></tr></thead><tbody id="orders-table"></tbody></table></div>
+              <div class="list-pagination">
+                <span id="orders-page-summary" class="list-page-summary">Đang tải danh sách…</span>
+                <div class="list-page-controls"><label for="orders-page-size">Số dòng</label><select id="orders-page-size" class="form-select form-select-sm" aria-label="Số đơn hàng mỗi trang"><option value="10" selected>10</option><option value="20">20</option><option value="50">50</option></select><button id="orders-prev-page" class="btn btn-sm btn-outline-dark" type="button">Trước</button><span id="orders-page-indicator" class="list-page-indicator">Trang 1 / 1</span><button id="orders-next-page" class="btn btn-sm btn-outline-dark" type="button">Sau</button></div>
+              </div>
             </section>
 
             <section id="view-users" class="data-view d-none">
               <div class="section-heading"><div><h2>Người dùng</h2><p>Quản lý tài khoản và phân quyền</p></div><button class="btn btn-outline-dark" id="reload-users">Làm mới</button></div>
               <div class="toolbar"><input id="user-search" class="form-control" placeholder="Tìm theo tên, email hoặc điện thoại..."><select id="user-role-filter" class="form-select"><option value="">Tất cả vai trò</option><option value="customer">Customer</option><option value="admin">Admin</option></select></div>
               <div class="table-responsive panel"><table class="table align-middle mb-0"><thead><tr><th>Người dùng</th><th>Điện thoại</th><th>Đơn hàng</th><th>Vai trò</th><th class="text-end">Thao tác</th></tr></thead><tbody id="users-table"></tbody></table></div>
+              <div class="list-pagination">
+                <span id="users-page-summary" class="list-page-summary">Đang tải danh sách…</span>
+                <div class="list-page-controls"><label for="users-page-size">Số dòng</label><select id="users-page-size" class="form-select form-select-sm" aria-label="Số người dùng mỗi trang"><option value="10" selected>10</option><option value="20">20</option><option value="50">50</option></select><button id="users-prev-page" class="btn btn-sm btn-outline-dark" type="button">Trước</button><span id="users-page-indicator" class="list-page-indicator">Trang 1 / 1</span><button id="users-next-page" class="btn btn-sm btn-outline-dark" type="button">Sau</button></div>
+              </div>
             </section>
 
             <section id="view-stats" class="data-view d-none">
-              <div class="section-heading"><div><h2>Thống kê</h2><p>Doanh thu, đơn hàng và tồn kho</p></div><select id="stats-period" class="form-select stats-period"><option value="day">Theo ngày</option><option value="month">Theo tháng</option></select></div>
-              <div class="stats-cards"><article class="panel stat-card"><span>Doanh thu đã thanh toán</span><strong id="stats-revenue-total">—</strong></article><article class="panel stat-card"><span>Đơn hàng đã thanh toán</span><strong id="stats-paid-orders">—</strong></article><article class="panel stat-card"><span>Sản phẩm sắp hết hàng</span><strong id="stats-low-stock-count">—</strong></article></div>
-              <div class="panel chart-panel"><h3>Doanh thu</h3><canvas id="revenue-chart" height="110"></canvas></div>
-              <div class="stats-grid"><div class="panel p-3"><h3 class="h5">Đơn hàng theo trạng thái</h3><canvas id="orders-status-chart" height="190"></canvas></div><div class="panel p-3"><h3 class="h5">Sản phẩm bán chạy</h3><div class="table-responsive"><table class="table table-sm align-middle"><thead><tr><th>Sản phẩm</th><th>Đã bán</th><th>Doanh thu</th></tr></thead><tbody id="top-products-table"></tbody></table></div></div></div>
-              <div class="panel p-3 mt-3"><h3 class="h5">Biến thể sắp hết hàng</h3><div class="table-responsive"><table class="table table-sm align-middle"><thead><tr><th>Sản phẩm</th><th>Size</th><th>Màu</th><th>Tồn</th></tr></thead><tbody id="low-stock-table"></tbody></table></div></div>
+              <div class="section-heading"><div><h2>Báo cáo nghiệp vụ</h2><p>Chọn báo cáo, đặt điều kiện cần xem rồi mới tải dữ liệu.</p></div></div>
+              <div class="report-search panel">
+                <label class="form-label" for="report-search-input">Tìm báo cáo</label>
+                <div class="report-search-control"><input id="report-search-input" class="form-control" type="search" placeholder="Ví dụ: doanh thu, đơn hàng, sản phẩm, tồn kho"><span id="report-count" class="subtext">4 báo cáo</span></div>
+              </div>
+              <div id="report-catalog" class="report-catalog" aria-label="Danh sách báo cáo"></div>
+              <div id="report-no-match" class="panel empty-row d-none">Không tìm thấy báo cáo phù hợp.</div>
+
+              <section id="report-builder" class="report-builder panel d-none" aria-labelledby="report-builder-title">
+                <div class="report-builder-heading">
+                  <div><p id="report-builder-category" class="eyebrow mb-1"></p><h3 id="report-builder-title" class="h4 mb-1"></h3><p id="report-builder-description" class="subtext mb-0"></p></div>
+                  <button id="clear-selected-report" class="btn btn-sm btn-outline-secondary" type="button">Chọn báo cáo khác</button>
+                </div>
+                <form id="report-filter-form">
+                  <div id="report-filter-fields" class="report-filter-fields"></div>
+                  <div class="report-actions"><span class="subtext">Báo cáo chỉ truy vấn dữ liệu khi bạn bấm xem.</span><button id="run-report" class="btn btn-dark" type="submit">Xem báo cáo</button></div>
+                </form>
+              </section>
+
+              <section id="report-results" class="report-results d-none" aria-live="polite">
+                <div class="report-result-heading"><div><p class="eyebrow mb-1">KẾT QUẢ</p><h3 id="report-result-title" class="h4 mb-1"></h3></div><span id="report-result-period" class="report-period"></span></div>
+                <div id="report-result-summary" class="report-summary"></div>
+                <div id="report-result-content"></div>
+              </section>
             </section>
 
             <section id="view-chat" class="data-view d-none">

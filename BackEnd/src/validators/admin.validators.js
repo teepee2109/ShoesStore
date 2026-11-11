@@ -43,15 +43,24 @@ export const notificationQuerySchema = pageQuerySchema.extend({
 });
 
 const dateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional();
+const dateRangeShape = { from: dateString, to: dateString };
+const validDateRange = ({ from, to }) => !from || !to || from <= to;
 export const revenueQuerySchema = z.object({
+  ...dateRangeShape,
   group: z.enum(['day', 'month']).default('day'),
-  from: dateString,
-  to: dateString,
-}).refine(({ from, to }) => !from || !to || from <= to, {
+}).refine(validDateRange, {
   message: 'Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.',
 });
 export const topProductsQuerySchema = z.object({
+  ...dateRangeShape,
   limit: z.coerce.number().int().min(1).max(50).default(10),
+}).refine(validDateRange, {
+  message: 'Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.',
+});
+export const orderStatusQuerySchema = z.object({
+  ...dateRangeShape,
+}).refine(validDateRange, {
+  message: 'Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.',
 });
 export const lowStockQuerySchema = z.object({
   threshold: z.coerce.number().int().min(0).max(100000).default(5),

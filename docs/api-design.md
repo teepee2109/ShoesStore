@@ -154,24 +154,26 @@ trong giỏ, cộng số lượng; server từ chối nếu tổng số lượng
 | PUT | `/orders/:order_id/cancel` | Chủ đơn | Đã có | Hủy đơn `pending`, chưa thanh toán |
 | GET | `/admin/orders` | Admin | Đã có | Lọc/phân trang tất cả đơn |
 | PUT | `/admin/orders/:order_id/status` | Admin | Đã có | Cập nhật trạng thái đơn và gửi notification |
-| POST | `/payments/vnpay/create` | Chủ đơn | Đã có | Tạo URL thanh toán VNPay sandbox |
-| GET | `/payments/vnpay/return` | Public callback | Đã có | Xác minh chữ ký, trả kết quả cho app |
-| GET | `/payments/vnpay/ipn` | VNPay callback | Đã có | Xác thực chữ ký, cập nhật payment/order |
+| POST | `/payments/sepay/create` | Chủ đơn | Đã có | Tạo form checkout SePay đã ký |
+| GET | `/payments/sepay/return` | Public callback | Đã có | Đưa khách về app; không cập nhật trạng thái thanh toán |
+| GET | `/payments/sepay/status/:order_id` | Chủ đơn | Đã có | Xem trạng thái thanh toán đã được IPN xác nhận |
+| POST | `/payments/sepay/ipn` | SePay callback | Đã có | Xác thực IPN bằng secret key, cập nhật payment/order |
 | GET | `/payments/:payment_id` | Chủ đơn/Admin | Thiết kế | Xem kết quả thanh toán đã lọc thông tin nhạy cảm |
 
 `POST /orders` nhận `{ "address_id": 3, "payment_method": "cod" }` hoặc
-`payment_method: "vnpay"`. V1 hỗ trợ `cod` và `vnpay`; có thể mở rộng thêm provider
+`payment_method: "sepay"`. V1 hỗ trợ `cod` và `sepay`; có thể mở rộng thêm provider
 sau. Server lấy các dòng hàng từ giỏ của user, lấy giá hiện
 tại từ DB, kiểm tra địa chỉ thuộc user, khóa các biến thể tồn kho, trừ kho, ghi
 `orders`/`order_items` với snapshot `unit_price`, rồi xóa giỏ hàng — tất cả trong
 một transaction. Client không được gửi `total_amount` hoặc `unit_price`.
 
-Luồng VNPay: app tạo đơn trước, sau đó gọi `/payments/vnpay/create` với
-`{ "order_id": 101 }`. Backend tự tính số tiền và ký URL bằng secret cấu hình.
-`return` chỉ phục vụ điều hướng giao diện; chỉ `ipn` có chữ ký hợp lệ mới được
-cập nhật trạng thái thanh toán. Callback phải xử lý lặp an toàn theo
-`transaction_id`. Cấu hình `VNPAY_RETURN_URL` và `VNPAY_IPN_URL` bằng HTTPS public;
-đăng ký URL IPN tương ứng trong merchant sandbox portal.
+Luồng SePay: app tạo đơn trước, sau đó gọi `/payments/sepay/create` với
+`{ "order_id": 101 }`. Backend tự tính số tiền, tạo mã hóa đơn và ký form
+checkout HMAC-SHA256 theo Merchant Secret Key; app POST form sang checkout SePay.
+Return chỉ phục vụ điều hướng giao diện. IPN POST phải có `X-Secret-Key` khớp
+`SEPAY_IPN_SECRET_KEY`, đúng mã hóa đơn, số tiền và tiền tệ trước khi cập nhật
+payment/order; callback lặp được xử lý idempotent. Cấu hình `SEPAY_RETURN_URL` và
+`SEPAY_IPN_URL` bằng HTTPS public, rồi đăng ký IPN URL và cùng secret trong SePay.
 
 `PUT /admin/orders/:order_id/status` nhận `{ "status": "confirmed" }`; backend
 kiểm tra chuyển trạng thái hợp lệ và ghi notification cho khách hàng.
@@ -222,10 +224,11 @@ token, kiểm tra quyền customer/admin trước khi join room hoặc ghi tin.
 | GET | `/admin/stats/low-stock` | Admin | Đã có | Biến thể tồn thấp |
 | GET | `/admin/stats/orders-by-status` | Admin | Đã có | Số đơn theo trạng thái |
 
-Các endpoint thống kê nhận `from`, `to` dạng `YYYY-MM-DD`; revenue nhận thêm
-`group=day|month`; low-stock nhận `threshold` (mặc định 5). Doanh thu chỉ tính
-đơn thanh toán thành công và loại đơn đã hủy/hoàn tiền. User gắn với đơn hàng không
-bị hard-delete; schema có khóa ngoại `RESTRICT` từ `orders`.
+Báo cáo doanh thu, sản phẩm bán chạy và đơn theo trạng thái nhận `from`, `to` dạng
+`YYYY-MM-DD`; báo cáo doanh thu nhận thêm `group=day|month`. Báo cáo tồn kho nhận
+`threshold` (mặc định 5) và đọc số lượng hiện tại. Doanh thu chỉ tính đơn đã thanh
+toán, loại đơn đã hủy. User gắn với đơn hàng không bị hard-delete; schema có khóa
+ngoại `RESTRICT` từ `orders`.
 
 Admin order status chỉ đi theo luồng `pending -> confirmed -> shipping -> delivered`;
 đơn chưa thanh toán có thể bị hủy từ `pending` hoặc `confirmed`, khi đó tồn kho
@@ -243,8 +246,8 @@ Swagger UI: `/api-docs/` (OpenAPI JSON: `/openapi.json`). Web Admin HTML/Bootstr
    conversation ở service/model; không tin ID từ client.
 3. Tạo đơn và trừ kho trong một transaction với `SELECT ... FOR UPDATE`; rollback
    nếu thiếu hàng hoặc bất kỳ bước nào lỗi.
-4. VNPay IPN kiểm chữ ký, mã tiền tệ, số tiền, mã giao dịch và trạng thái đơn; cập
-   nhật payment/order trong transaction, idempotent khi VNPay gửi lại callback.
+4. SePay IPN kiểm secret, mã tiền tệ, số tiền, mã hóa đơn và trạng thái đơn; cập
+   nhật payment/order trong transaction, idempotent khi SePay gửi lại callback.
 5. Không trả password hash, JWT secret, thông tin cấu hình hoặc `raw_response`.
 6. Ẩn sản phẩm (`is_active = 0`) thay vì xóa cứng sản phẩm đã có trong lịch sử đơn.
 
@@ -260,6 +263,6 @@ Swagger UI: `/api-docs/` (OpenAPI JSON: `/openapi.json`). Web Admin HTML/Bootstr
 
 1. Cart + address + checkout/order transaction.
 2. Admin CRUD product/category/variant và quản lý trạng thái đơn.
-3. VNPay create/IPN/return.
+3. SePay create/IPN/return.
 4. Reviews, wishlist, notifications.
 5. Chat Socket.IO và dashboard thống kê.

@@ -28,7 +28,7 @@
 | Database | MySQL (KHONG dung SQLite lam DB chinh) |
 | API docs | Swagger (swagger-ui-express) + Postman collection |
 | Web Admin | React (hoac HTML + Bootstrap) |
-| Thanh toan | VNPay sandbox (co the them MoMo / PayPal) |
+| Thanh toan | SePay sandbox (co the them MoMo / PayPal) |
 | Chat | Socket.IO |
 | Deploy | Render / Railway / VPS (backend + DB) |
 
@@ -42,7 +42,7 @@
 - [x] Gio hang: them, sua so luong, xoa
 - [x] Yeu thich (wishlist)
 - [x] Dat hang: chon dia chi, phuong thuc thanh toan
-- [x] Thanh toan minh hoa qua VNPay sandbox
+- [x] Thanh toan qua SePay sandbox
 - [x] Lich su don hang va theo doi trang thai
 - [x] Danh gia san pham (chi sau khi da nhan hang)
 - [x] Chat voi cua hang (real-time qua Socket.IO)
@@ -55,7 +55,7 @@
 - [x] Upload anh san pham
 - [x] Quan ly don hang, doi trang thai
 - [x] Quan ly nguoi dung
-- [x] Thong ke: doanh thu theo ngay/thang, san pham ban chay, ton kho thap, so don theo trang thai
+- [x] Bao cao nghiep vu theo yeu cau: doanh thu, trang thai don, san pham ban chay, ton kho can bo sung
 - [x] Tra loi chat khach hang
 
 ## 4. Kien truc
@@ -64,7 +64,7 @@
 [Flutter App] --HTTPS/REST--> [Node.js + Express API] --> [MySQL]
 [Web Admin]   --HTTPS/REST-->          |
 [Flutter/Admin] <--WebSocket (Socket.IO)--+
-                                       +--> [VNPay sandbox] (tao URL + IPN callback)
+                                       +--> [SePay checkout] (form ky + IPN callback)
 ```
 
 Backend theo mo hinh: `routes -> controllers -> services -> models/repositories`.
@@ -89,7 +89,7 @@ PE_PRM393/
 
 Backend có xác thực JWT, catalog, CRUD quản trị, giỏ hàng, địa chỉ, wishlist,
 đặt/hủy đơn có transaction, review sau khi giao hàng, notification, thanh toán
-VNPay sandbox, chat Socket.IO và thống kê. Web Admin HTML + Bootstrap phục vụ từ
+SePay sandbox, chat Socket.IO và thống kê. Web Admin HTML + Bootstrap phục vụ từ
 backend tại `/admin-ui/`.
 
 ## 6. Thiet ke co so du lieu (MySQL)
@@ -135,7 +135,7 @@ da co trong code va endpoint nao dang la thiet ke.
 5. Product detail (chon size/mau)
 6. Cart
 7. Checkout (dia chi, phuong thuc thanh toan)
-8. Payment WebView (VNPay)
+8. Payment WebView (SePay)
 9. Order list / Order detail
 10. Wishlist
 11. Chat
@@ -181,7 +181,7 @@ Bottom navigation: Home - Search - Wishlist - Cart - Profile.
 - [x] Flutter goi API that, xu ly loading/loi/validation
 - [x] State management (Provider) + async/await
 - [x] SharedPreferences luu token/login state
-- [x] Tich hop VNPay sandbox, chat, thong ke (can cau hinh merchant va IPN public URL)
+- [x] Tich hop SePay sandbox, chat, thong ke (can cau hinh merchant va IPN public URL)
 - [x] README: huong dan chay app va tai khoan test
 
 ### Slot 18 - Nop cuoi
@@ -216,17 +216,18 @@ Swagger UI: `http://localhost:3000/api-docs/` · OpenAPI JSON:
 `http://localhost:3000/openapi.json` · Web Admin: `http://localhost:3000/admin-ui/`.
 Postman collection: [docs/api.postman.json](docs/api.postman.json).
 
-### VNPay sandbox va IPN
+### SePay sandbox va IPN
 
-Trong `BackEnd/.env`, dien `VNPAY_TMN_CODE` va `VNPAY_HASH_SECRET` theo tai khoan
-sandbox; giu `VNPAY_URL` o dia chi sandbox. De VNPay goi IPN khi chay local, mo
-cong backend bang `ngrok http 3000`, roi dat `VNPAY_RETURN_URL` va
-`VNPAY_IPN_URL` theo domain HTTPS ngrok. Khai bao cung URL IPN trong merchant
-portal VNPay. URL return co dang
-`https://<domain>/api/v1/payments/vnpay/return`; URL IPN co dang
-`https://<domain>/api/v1/payments/vnpay/ipn`. Domain ngrok thay doi thi cap nhat
-ca `.env` va merchant portal, sau do khoi dong lai backend. IPN la noi cap nhat
-trang thai thanh toan chinh thuc; return URL chi hien ket qua cho nguoi dung.
+Trong `BackEnd/.env`, chon `SEPAY_ENVIRONMENT=sandbox` va dien `SEPAY_MERCHANT_ID`,
+`SEPAY_MERCHANT_SECRET_KEY` theo thong tin sandbox. Tao IPN voi kieu xac thuc
+Secret Key, sau do dien key do vao `SEPAY_IPN_SECRET_KEY`. Khi backend chay local,
+mo cong bang `ngrok http 3000`; dat `SEPAY_RETURN_URL` va `SEPAY_IPN_URL` theo
+domain HTTPS ngrok. Cau hinh IPN URL trong SePay la
+`https://<domain>/api/v1/payments/sepay/ipn`; return URL la
+`https://<domain>/api/v1/payments/sepay/return`. IPN la noi cap nhat trang thai
+thanh toan chinh thuc; return URL chi dua nguoi dung tro lai app. De chuyen sang
+giao dich that, chon `SEPAY_ENVIRONMENT=production` va dung bo Merchant ID/Secret
+Key production tu SePay. Khong dua secret key vao Flutter app hoac Git.
 
 Chat realtime: Socket.IO cung origin voi backend. Client gui JWT trong handshake
 `auth.token`; events: `join`, `message:send`, `message:new`, `typing`.
@@ -270,7 +271,7 @@ Neu chay tren dien thoai that, thay bang IP LAN cua may tinh; khi deploy, dung H
 | GET/PUT/DELETE | `/api/v1/admin/users` va `/api/v1/admin/users/:id` | Quan ly tai khoan, khong tra password hash (admin) |
 | GET/POST | `/api/v1/products/:id/reviews` | Liet ke review; tao review neu da co don delivered |
 | GET/PATCH | `/api/v1/notifications` va `/api/v1/notifications/:id/read` | Thong bao cua tai khoan dang dang nhap |
-| POST/GET | `/api/v1/payments/vnpay/create`, `/return`, `/ipn` | Tao URL sandbox, xac minh return va IPN cap nhat payment |
+| POST/GET | `/api/v1/payments/sepay/create`, `/return`, `/status/:order_id`, `/ipn` | Tao form checkout, dua app ve sau redirect, tra trang thai va IPN cap nhat payment |
 | GET | `/api/v1/admin/stats/*` | Doanh thu, top products, ton kho thap, dem don theo status |
 | GET | `/api/v1/admin/chats` va `/api/v1/admin/chats/:customerId/messages` | Danh sach hoi thoai va lich su chat |
 

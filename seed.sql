@@ -480,12 +480,12 @@ INSERT INTO wishlists (user_id, product_id) VALUES
 
 -- orders
 INSERT INTO orders (id, user_id, address_id, shipping_name, shipping_phone, shipping_address, total_amount, status, payment_method, payment_status, created_at) VALUES
-(1, 2, 1, 'Nguyen Van An', '0912345678', '12 Pho Hue, Hai Ba Trung, Ha Noi', 6180000, 'delivered', 'vnpay', 'paid', '2026-10-02 10:15:00'),
+(1, 2, 1, 'Nguyen Van An', '0912345678', '12 Pho Hue, Hai Ba Trung, Ha Noi', 6180000, 'delivered', 'sepay', 'paid', '2026-10-02 10:15:00'),
 (2, 2, 1, 'Nguyen Van An', '0912345678', '12 Pho Hue, Hai Ba Trung, Ha Noi', 2700000, 'delivered', 'cod', 'paid', '2026-10-10 14:30:00'),
-(3, 3, 3, 'Tran Thi Binh', '0987654321', '45 Nguyen Hue, Quan 1, TP Ho Chi Minh', 5590000, 'delivered', 'vnpay', 'paid', '2026-10-12 09:05:00'),
+(3, 3, 3, 'Tran Thi Binh', '0987654321', '45 Nguyen Hue, Quan 1, TP Ho Chi Minh', 5590000, 'delivered', 'sepay', 'paid', '2026-10-12 09:05:00'),
 (4, 3, 3, 'Tran Thi Binh', '0987654321', '45 Nguyen Hue, Quan 1, TP Ho Chi Minh', 4580000, 'shipping', 'momo', 'paid', '2026-10-25 16:45:00'),
 (5, 4, 4, 'Le Minh Chau', '0934567890', '88 Bach Dang, Hai Chau, Da Nang', 5580000, 'confirmed', 'cod', 'unpaid', '2026-10-29 11:20:00'),
-(6, 2, 2, 'Nguyen Van An', '0912345678', 'Toa S1, Vinhomes Smart City, Nam Tu Liem, Ha Noi', 2690000, 'pending', 'vnpay', 'unpaid', '2026-11-01 19:00:00'),
+(6, 2, 2, 'Nguyen Van An', '0912345678', 'Toa S1, Vinhomes Smart City, Nam Tu Liem, Ha Noi', 2690000, 'pending', 'sepay', 'unpaid', '2026-11-01 19:00:00'),
 (7, 4, 4, 'Le Minh Chau', '0934567890', '88 Bach Dang, Hai Chau, Da Nang', 1290000, 'cancelled', 'cod', 'unpaid', '2026-10-20 08:30:00'),
 (8, 3, 3, 'Tran Thi Binh', '0987654321', '45 Nguyen Hue, Quan 1, TP Ho Chi Minh', 4090000, 'delivered', 'paypal', 'paid', '2026-10-18 21:10:00');
 
@@ -505,12 +505,12 @@ INSERT INTO order_items (order_id, variant_id, quantity, unit_price) VALUES
 
 -- payments
 INSERT INTO payments (order_id, provider, transaction_id, amount, status, raw_response, created_at) VALUES
-(1, 'vnpay', 'VN14000137', 6180000, 'success', '{"provider":"vnpay","code":"00","note":"seed data"}', '2026-10-02 10:15:00'),
+(1, 'sepay', 'SE14000137', 6180000, 'success', '{"provider":"sepay","status":"CAPTURED","note":"seed data"}', '2026-10-02 10:15:00'),
 (2, 'cod', NULL, 2700000, 'success', NULL, '2026-10-10 14:30:00'),
-(3, 'vnpay', 'VN14000411', 5590000, 'success', '{"provider":"vnpay","code":"00","note":"seed data"}', '2026-10-12 09:05:00'),
+(3, 'sepay', 'SE14000411', 5590000, 'success', '{"provider":"sepay","status":"CAPTURED","note":"seed data"}', '2026-10-12 09:05:00'),
 (4, 'momo', 'MO14000548', 4580000, 'success', '{"provider":"momo","code":"00","note":"seed data"}', '2026-10-25 16:45:00'),
 (5, 'cod', NULL, 5580000, 'pending', NULL, '2026-10-29 11:20:00'),
-(6, 'vnpay', NULL, 2690000, 'pending', NULL, '2026-11-01 19:00:00'),
+(6, 'sepay', NULL, 2690000, 'pending', NULL, '2026-11-01 19:00:00'),
 (7, 'cod', NULL, 1290000, 'pending', NULL, '2026-10-20 08:30:00'),
 (8, 'paypal', 'PA14001096', 4090000, 'success', '{"provider":"paypal","code":"00","note":"seed data"}', '2026-10-18 21:10:00');
 
@@ -536,7 +536,7 @@ INSERT INTO notifications (user_id, title, body, is_read, created_at) VALUES
 (2, 'Don hang #1 da giao thanh cong', 'Cam on ban da mua sam. Hay danh gia san pham nhe!', 1, '2026-10-30 10:00:00'),
 (3, 'Don hang #4 dang duoc giao', 'Don hang cua ban dang tren duong van chuyen.', 0, '2026-10-30 10:00:00'),
 (4, 'Don hang #5 da duoc xac nhan', 'Cua hang da xac nhan don hang cua ban.', 0, '2026-10-30 10:00:00'),
-(2, 'Don hang #6 dang cho thanh toan', 'Vui long hoan tat thanh toan VNPay.', 0, '2026-10-30 10:00:00'),
+(2, 'Don hang #6 dang cho thanh toan', 'Vui long hoan tat thanh toan SePay.', 0, '2026-10-30 10:00:00'),
 (1, 'Don hang moi #6', 'Khach hang Nguyen Van An vua dat don moi.', 0, '2026-10-30 10:00:00');
 
 SET FOREIGN_KEY_CHECKS = 1;

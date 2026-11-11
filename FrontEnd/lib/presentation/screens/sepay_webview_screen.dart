@@ -1,26 +1,28 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-import '../../data/models/vnpay_payment.dart';
+import '../../data/models/sepay_payment.dart';
 import '../../data/repositories/payment_repository.dart';
 
-class VnpayWebViewScreen extends StatefulWidget {
-  const VnpayWebViewScreen({super.key, required this.payment});
+class SePayWebViewScreen extends StatefulWidget {
+  const SePayWebViewScreen({super.key, required this.payment});
 
-  final VnpayPaymentSession payment;
+  final SePayPaymentSession payment;
 
   @override
-  State<VnpayWebViewScreen> createState() => _VnpayWebViewScreenState();
+  State<SePayWebViewScreen> createState() => _SePayWebViewScreenState();
 }
 
-class _VnpayWebViewScreenState extends State<VnpayWebViewScreen> {
+class _SePayWebViewScreenState extends State<SePayWebViewScreen> {
   late final WebViewController _controller;
   late final PaymentRepository _paymentRepository;
-  VnpayPaymentResult? _result;
+  SePayPaymentResult? _result;
   Object? _error;
   bool _isLoading = true;
   bool _handlingReturn = false;
@@ -61,7 +63,14 @@ class _VnpayWebViewScreenState extends State<VnpayWebViewScreen> {
           },
         ),
       )
-      ..loadRequest(Uri.parse(widget.payment.paymentUrl));
+      ..loadRequest(
+        Uri.parse(widget.payment.checkoutUrl),
+        method: LoadRequestMethod.post,
+        headers: const {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: Uint8List.fromList(
+          utf8.encode(Uri(queryParameters: widget.payment.formFields).query),
+        ),
+      );
   }
 
   bool _isReturnUrl(Uri uri) {
@@ -78,8 +87,9 @@ class _VnpayWebViewScreenState extends State<VnpayWebViewScreen> {
     _handlingReturn = true;
     if (mounted) setState(() => _isLoading = true);
     try {
-      final result = await _paymentRepository.verifyVnpayReturn(
-        uri.queryParameters,
+      final result = await _paymentRepository.getSePayStatus(
+        widget.payment.orderId,
+        returnStatus: uri.queryParameters['result'] ?? '',
       );
       if (mounted) {
         setState(() {
@@ -104,7 +114,7 @@ class _VnpayWebViewScreenState extends State<VnpayWebViewScreen> {
         onPressed: () => context.go('/orders/${widget.payment.orderId}'),
       ),
       title: const Text(
-        'Thanh toán VNPay',
+        'Thanh toán SePay',
         style: TextStyle(fontWeight: FontWeight.w800),
       ),
     ),
@@ -124,19 +134,26 @@ class _VnpayWebViewScreenState extends State<VnpayWebViewScreen> {
           ),
   );
 
-  Widget _buildResult(VnpayPaymentResult result) {
-    final confirmed = result.paymentStatus == 'paid';
-    final success = result.successful;
+  Widget _buildResult(SePayPaymentResult result) {
+    final confirmed = result.successful;
+    final returnedSuccess = result.returnStatus == 'success';
+    final cancelled = result.returnStatus == 'cancel';
     final title = confirmed
         ? 'Thanh toán thành công'
-        : success
+        : returnedSuccess
         ? 'Đang xác nhận thanh toán'
+        : cancelled
+        ? 'Đã hủy thanh toán'
         : 'Thanh toán chưa hoàn tất';
     final detail = confirmed
-        ? 'Đơn hàng #${result.orderId} đã được xác nhận thanh toán.'
-        : success
-        ? 'VNPay đã trả kết quả thành công. Hệ thống đang chờ IPN xác nhận giao dịch.'
-        : 'Giao dịch chưa thành công (mã ${result.responseCode}). Bạn có thể kiểm tra lại đơn hàng.';
+        ? 'Đơn hàng #${result.orderId} đã được SePay xác nhận thanh toán.'
+        : returnedSuccess
+        ? 'SePay đã nhận thanh toán. Hệ thống đang chờ IPN xác nhận giao dịch.'
+        : cancelled
+        ? 'Bạn đã hủy giao dịch. Đơn hàng vẫn có thể thanh toán lại.'
+        : result.attemptStatus == 'failed'
+        ? 'Giao dịch chưa thành công. Bạn có thể kiểm tra lại đơn hàng.'
+        : 'SePay chưa xác nhận thanh toán cho đơn hàng này.';
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(28),
@@ -146,13 +163,13 @@ class _VnpayWebViewScreenState extends State<VnpayWebViewScreen> {
             Icon(
               confirmed
                   ? Icons.check_circle_rounded
-                  : success
+                  : returnedSuccess
                   ? Icons.hourglass_top_rounded
                   : Icons.error_outline_rounded,
               size: 64,
               color: confirmed
                   ? Colors.green
-                  : success
+                  : returnedSuccess
                   ? Colors.orange
                   : Colors.redAccent,
             ),
